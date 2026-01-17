@@ -1,81 +1,81 @@
-import React from 'react';
-import { View, Text, StatusBar, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StatusBar, TouchableOpacity, Alert } from 'react-native';
 import { TextInput, IconButton } from 'react-native-paper';
 import { styles } from './styles';
+import { supabase } from '../../../../lib/supabase';
 
 const SignUpScreen = ({ navigation }: any) => {
-    const gotTologin=()=>{
-        navigation.navigate('login')
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const signUp = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'All fields required');
+      return;
     }
+
+    const { error,data } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    console.log("data=================",data);
+    console.log("error=================",error);
+    if (error) {
+      Alert.alert('Signup Error', error.message);
+      return;
+    }
+
+    Alert.alert('Success', 'Account created', [
+      { text: 'OK', onPress: () => navigation.navigate('login') },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#DDE3F8" />
 
       <View style={styles.card}>
-        {/* Decorative circles */}
         <View style={styles.circleSmall} />
         <View style={styles.circleBig} />
 
-        {/* Title */}
         <Text style={styles.title}>Create{'\n'}Account</Text>
 
-        {/* Name */}
         <TextInput
           label="Name"
-          mode="flat"
-          left={<TextInput.Icon icon="account-outline" />}
-          underlineColor="#B39DDB"
-          activeUnderlineColor="#6A1B9A"
+          value={name}
+          onChangeText={setName}
           style={styles.input}
         />
 
-        {/* Email */}
         <TextInput
           label="Email"
-          mode="flat"
-          left={<TextInput.Icon icon="email-outline" />}
-          underlineColor="#B39DDB"
-          activeUnderlineColor="#6A1B9A"
+          value={email}
+          onChangeText={setEmail}
           style={styles.input}
         />
 
-        {/* Password */}
         <TextInput
           label="Password"
-          mode="flat"
           secureTextEntry
-          left={<TextInput.Icon icon="lock-outline" />}
-          underlineColor="#B39DDB"
-          activeUnderlineColor="#6A1B9A"
+          value={password}
+          onChangeText={setPassword}
           style={styles.input}
         />
 
-        {/* Re-Password */}
-        <TextInput
-          label="Re-Password"
-          mode="flat"
-          secureTextEntry
-          left={<TextInput.Icon icon="lock-outline" />}
-          underlineColor="#B39DDB"
-          activeUnderlineColor="#6A1B9A"
-          style={styles.input}
-        />
-
-        {/* Arrow Button */}
         <IconButton
           icon="arrow-right"
           size={28}
-          onPress={gotTologin}
+          onPress={signUp}
           iconColor="#FFF"
           style={styles.arrowBtn}
         />
 
-        {/* Footer */}
-
-        <View style={[{ flexDirection: 'row' }, { alignSelf: 'center' }]}>
+        <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
           <Text style={styles.footer}>Already have an account?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('login')}>
-            <Text style={[styles.signIn]}>Sign in</Text>
+            <Text style={styles.signIn}> Sign in</Text>
           </TouchableOpacity>
         </View>
       </View>

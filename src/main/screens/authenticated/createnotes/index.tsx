@@ -10,25 +10,33 @@ import {
   Button,
 } from 'react-native-paper';
 import styles from './styles';
+import { supabase } from '../../../../lib/supabase';
 
 const CreateNotesScreen = ({ navigation }: any) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  const saveNote = () => {
-    if (!title.trim() || !content.trim()) {
-      Alert.alert('Validation', 'Title and content are required');
-      return;
-    }
 
-    // Dummy save
-    Alert.alert('Success', 'Note created successfully', [
-      {
-        text: 'OK',
-        onPress: () => navigation.goBack(),
-      },
-    ]);
-  };
+ 
+const saveNote = async () => {
+  if (!title || !content) {
+    Alert.alert('Validation', 'All fields required');
+    return;
+  }
+
+  const { error } = await supabase
+    .from('notes')
+    .insert([{ title, content }]);
+
+  if (error) {
+    Alert.alert('Error', error.message);
+    return;
+  }
+
+  Alert.alert('Success', 'Note created', [
+    { text: 'OK', onPress: () => navigation.goBack() },
+  ]);
+};
 
   return (
     <View style={styles.container}>

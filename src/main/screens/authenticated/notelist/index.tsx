@@ -3,36 +3,64 @@ import { View, Text, FlatList, Alert, StatusBar } from 'react-native';
 import { TextInput, IconButton, Card, FAB } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import styles from './styles';
-
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { supabase } from '../../../../lib/supabase';
 type Note = {
   id: string;
   title: string;
   content: string;
 };
 
-const NotesScreen = () => {
+const NotesScreen = route => {
   const navigation = useNavigation();
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: '1',
-      title: 'Shopping List',
-      content: 'Buy milk, bread, eggs, and fruits.',
-    },
-    {
-      id: '2',
-      title: 'Meeting Notes',
-      content: 'Discuss project timeline and milestones.',
-    },
-    {
-      id: '3',
-      title: 'React Native Tips',
-      content: 'Use FlatList for better performance.',
-    },
-  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  const fetchNotes = async () => {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error) setNotes(data || []);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotes();
+    }, []),
+  );
 
   const [search, setSearch] = useState('');
+  const deleteNote = async (id: string) => {
+    Alert.alert('Delete', 'Are you sure?', [
+      { text: 'Cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await supabase.from('notes').delete().eq('id', id);
+          fetchNotes();
+        },
+      },
+    ]);
+  };
+  const note = route.params?.note;
 
-  const filteredNotes = notes.filter(
+  const [title, setTitle] = useState(note?.title || '');
+  const [content, setContent] = useState(note?.content || '');
+
+  const saveNote = async () => {
+    if (note) {
+      await supabase.from('notes').update({ title, content }).eq('id', note.id);
+    } else {
+      await supabase.from('notes').insert([{ title, content }]);
+    }
+
+   
+  };
+
+  const filteredNotes = notes?.filter(
     note =>
       note.title.toLowerCase().includes(search.toLowerCase()) ||
       note.content.toLowerCase().includes(search.toLowerCase()),
@@ -52,6 +80,7 @@ const NotesScreen = () => {
         value={search}
         onChangeText={setSearch}
         style={styles.search}
+        placeholderTextColor={'black'}
       />
 
       {/* Notes List */}
@@ -66,8 +95,16 @@ const NotesScreen = () => {
               <Text style={styles.noteTitle}>{item.title}</Text>
 
               <View style={styles.actions}>
-                <IconButton icon="pencil" size={20} onPress={() => {}} />
-                <IconButton icon="delete" size={20} onPress={() => {}} />
+                <IconButton
+                  icon="pencil"
+                  size={20}
+                  onPress={() => {}}
+                />
+                <IconButton
+                  icon="delete"
+                  size={20}
+                  onPress={() => {}}
+                />
               </View>
             </View>
 
