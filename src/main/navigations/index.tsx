@@ -5,6 +5,7 @@ import { Provider } from 'react-native-paper';
 import MainStack from './main-navigation';
 import AuthStack from './auth-navigation';
 import { supabase } from '../../lib/supabase';
+import { View } from 'react-native';
 
 const Navigator = () => {
   const [session, setSession] = useState(null);
@@ -29,9 +30,12 @@ const Navigator = () => {
 
   return (
     <Provider>
-      <NavigationContainer>
-        {session ? <MainStack /> : <AuthStack />}
-      </NavigationContainer>
+      <View style={{ flex: 1, backgroundColor: '#DDE3F8' }}>
+        <NavigationContainer>
+       
+          {session ? <MainStack /> : <AuthStack />}
+        </NavigationContainer>
+      </View>
     </Provider>
   );
 };

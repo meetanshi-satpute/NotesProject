@@ -1,67 +1,158 @@
-import { StyleSheet } from "react-native";
+import {StyleSheet, Dimensions} from 'react-native';
+
+const {width} = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    backgroundColor: '#DDE3F8',
+    backgroundColor: '#0F0B1E',
+  },
+  kav: {
+    flex: 1,
+  },
+  // Replaces ScrollView — centers card vertically & horizontally
+  inner: {
+    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+  },
+  blobRed: {
+    position: 'absolute',
+    top: -100,
+    right: width * 0.1,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(239,68,68,0.18)',
+  },
+  blobBlue: {
+    position: 'absolute',
+    bottom: -80,
+    left: -50,
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+    backgroundColor: 'rgba(59,130,246,0.15)',
+  },
+  blobPurple: {
+    position: 'absolute',
+    top: '35%',
+    left: -70,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(139,92,246,0.13)',
   },
   card: {
-    backgroundColor: '#EEF1FF',
-    borderRadius: 30,
-    padding: 25,
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    padding: 28,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 20},
+    shadowOpacity: 0.5,
+    shadowRadius: 40,
+    elevation: 20,
+  },
+  iconBadge: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: '#7C3AED',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#8B5CF6',
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
     elevation: 8,
-    overflow: 'hidden',
+  },
+  iconBadgeEmoji: {
+    fontSize: 24,
+  },
+  appLabel: {
+    color: '#8B5CF6',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 3,
+    marginBottom: 6,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#5E35B1',
-    marginBottom: 40,
+    color: '#FFFFFF',
+    fontSize: 30,
+    fontWeight: '800',
+    marginBottom: 26,
+    letterSpacing: -0.5,
+    lineHeight: 36,
   },
   input: {
-    backgroundColor: 'transparent',
-    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 12,
   },
-  arrowBtn: {
-    backgroundColor: '#6A1B9A',
-    alignSelf: 'center',
-    borderRadius: 16,
-    marginTop: 10,
+  inputContent: {
+    color: '#FFFFFF',
+    fontSize: 15,
   },
-  footer: {
-    textAlign: 'center',
-    marginTop: 25,
-    color: '#777',
+  btnWrap: {
+    marginTop: 26,
+  },
+  signUpBtn: {
+    backgroundColor: '#7C3AED',
+    borderRadius: 14,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: '#7C3AED',
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  signUpBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+  },
+  signUpBtnArrow: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  dividerText: {
+    color: 'rgba(255,255,255,0.3)',
     fontSize: 13,
   },
-  signIn: {
-    color: '#6A1B9A',
+  footerRow: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+  },
+  footerText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 14,
+  },
+  signInLink: {
+    color: '#8B5CF6',
+    fontSize: 14,
     fontWeight: '600',
-       marginTop: 25,
-       marginLeft:5
-  },
-
-  /* Decorative circles */
-  circleSmall: {
-    position: 'absolute',
-    top: -30,
-    left: -20,
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: '#D1C4E9',
-    opacity: 0.6,
-  },
-  circleBig: {
-    position: 'absolute',
-    top: 40,
-    right: -30,
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: '#C5CAE9',
-    opacity: 0.5,
   },
 });

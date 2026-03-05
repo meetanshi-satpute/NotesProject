@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,10 @@ import {
   StatusBar,
   Modal,
   TouchableOpacity,
+  ToastAndroid,
+  BackHandler,
 } from 'react-native';
-import { TextInput, IconButton, Card, FAB } from 'react-native-paper';
+import { TextInput, IconButton, FAB } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import styles from './styles';
 import { supabase } from '../../../../lib/supabase';
@@ -26,13 +28,11 @@ const NotesScreen = ({ route }: any) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState('');
 
-  // Edit Modal States
   const [editVisible, setEditVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
 
-  // Fetch Notes
   const fetchNotes = async () => {
     const { data, error } = await supabase
       .from('notes')
@@ -52,7 +52,6 @@ const NotesScreen = ({ route }: any) => {
     }, []),
   );
 
-  // Delete Note
   const deleteNote = (id: string) => {
     Alert.alert('Delete Note', 'Are you sure?', [
       { text: 'Cancel' },
@@ -61,7 +60,6 @@ const NotesScreen = ({ route }: any) => {
         style: 'destructive',
         onPress: async () => {
           const { error } = await supabase.from('notes').delete().eq('id', id);
-
           if (error) {
             Alert.alert('Error', error.message);
           } else {
@@ -72,16 +70,11 @@ const NotesScreen = ({ route }: any) => {
     ]);
   };
 
-  // Update Note
   const updateNote = async () => {
     if (!selectedNote) return;
-
     const { error } = await supabase
       .from('notes')
-      .update({
-        title: editTitle,
-        content: editContent,
-      })
+      .update({ title: editTitle, content: editContent })
       .eq('id', selectedNote.id);
 
     if (error) {
@@ -93,30 +86,89 @@ const NotesScreen = ({ route }: any) => {
     }
   };
 
-  // Filter Notes
   const filteredNotes = notes.filter(
     note =>
       note.title.toLowerCase().includes(search.toLowerCase()) ||
       note.content.toLowerCase().includes(search.toLowerCase()),
   );
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#DDE3F8' }}>
-      <View style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#DDE3F8" />
+  const goToSettingScreen = () => {
+    navigation.navigate('settingScreen');
+  };
 
-        <Text style={styles.header}>My Notes</Text>
+  // Card accent colors cycling through brand palette
+  const ACCENTS = ['#EF4444', '#8B5CF6', '#3B82F6', '#F59E0B', '#10B981'];
+
+  let presscount = 0;
+  useEffect(() => {
+    const onBackPress = () => {
+      if (presscount === 0) {
+        presscount = 1;
+        ToastAndroid.show('Tap again to Exit', ToastAndroid.SHORT);
+        setTimeout(() => {
+          presscount = 0;
+        }, 2000);
+        return true;
+      } else {
+        BackHandler.exitApp();
+        return true;
+      }
+    };
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
+    return () => subscription.remove(); // ✅ cleanup
+  }, []);
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F0B1E" />
+
+      {/* Ambient blobs */}
+      <View style={styles.blobRed} />
+      <View style={styles.blobBlue} />
+      <View style={styles.blobPurple} />
+
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.headerSub}>NOTES APP</Text>
+            <Text style={styles.header}>My Notes</Text>
+          </View>
+          <TouchableOpacity
+            onPress={goToSettingScreen}
+            style={styles.settingsBtn}
+            activeOpacity={0.8}
+          >
+            <IconButton
+              icon="cog-outline"
+              size={22}
+              iconColor="rgba(255,255,255,0.8)"
+              onPress={goToSettingScreen}
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* Search */}
         <TextInput
           placeholder="Search notes..."
-          mode="flat"
-          left={<TextInput.Icon icon="magnify" />}
+          mode="outlined"
+          left={<TextInput.Icon icon="magnify" color="rgba(255,255,255,0.4)" />}
           value={search}
-          placeholderTextColor={'black'}
+          placeholderTextColor="rgba(255,255,255,0.3)"
           onChangeText={setSearch}
+          outlineColor="rgba(255,255,255,0.12)"
+          activeOutlineColor="#8B5CF6"
+          textColor="#FFFFFF"
           style={styles.search}
-          textColor="black"
+          contentStyle={styles.searchContent}
+          theme={{
+            colors: {
+              background: 'rgba(255,255,255,0.07)',
+              onSurfaceVariant: 'rgba(255,255,255,0.4)',
+            },
+          }}
         />
 
         {/* Notes List */}
@@ -124,58 +176,99 @@ const NotesScreen = ({ route }: any) => {
           data={filteredNotes}
           keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 80 }}
-          renderItem={({ item }) => (
-            <Card style={styles.noteCard}>
-              <View style={styles.noteHeader}>
-                <Text style={styles.noteTitle}>{item.title}</Text>
-
-                <View style={styles.actions}>
-                  <IconButton
-                    icon="pencil"
-                    size={20}
-                    onPress={() => {
-                      setSelectedNote(item);
-                      setEditTitle(item.title);
-                      setEditContent(item.content);
-                      setEditVisible(true);
-                    }}
-                  />
-
-                  <IconButton
-                    icon="delete"
-                    size={20}
-                    onPress={() => deleteNote(item.id)}
-                  />
+          contentContainerStyle={{ paddingBottom: 100 }}
+          renderItem={({ item, index }) => (
+            <View style={styles.noteCard}>
+              {/* Accent left bar */}
+              <View
+                style={[
+                  styles.noteAccentBar,
+                  { backgroundColor: ACCENTS[index % ACCENTS.length] },
+                ]}
+              />
+              <View style={styles.noteInner}>
+                <View style={styles.noteHeader}>
+                  <Text style={styles.noteTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <View style={styles.actions}>
+                    <TouchableOpacity
+                      style={styles.actionBtn}
+                      onPress={() => {
+                        setSelectedNote(item);
+                        setEditTitle(item.title);
+                        setEditContent(item.content);
+                        setEditVisible(true);
+                      }}
+                    >
+                      <IconButton
+                        icon="pencil-outline"
+                        size={18}
+                        iconColor="rgba(255,255,255,0.55)"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.actionBtn}
+                      onPress={() => deleteNote(item.id)}
+                    >
+                      <IconButton
+                        icon="delete-outline"
+                        size={18}
+                        iconColor="rgba(239,68,68,0.7)"
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
+                <Text style={styles.noteContent} numberOfLines={2}>
+                  {item.content}
+                </Text>
               </View>
-
-              <Text style={styles.noteContent}>{item.content}</Text>
-            </Card>
+            </View>
           )}
-          ListEmptyComponent={<Text style={styles.empty}>No notes found</Text>}
+          ListEmptyComponent={
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyIcon}>📝</Text>
+              <Text style={styles.empty}>No notes yet</Text>
+              <Text style={styles.emptySub}>
+                Tap + to create your first note
+              </Text>
+            </View>
+          }
         />
 
-        {/* Create Note Button */}
+        {/* FAB */}
         <FAB
           icon="plus"
           style={styles.fab}
+          color="#FFFFFF"
           onPress={() => navigation.navigate('createNoteScreen' as never)}
         />
 
-        {/* Edit Note Modal */}
+        {/* Edit Modal */}
         <Modal visible={editVisible} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Edit Note</Text>
+              {/* Modal header */}
+              <View style={styles.modalHeader}>
+                <View style={styles.modalDot} />
+                <Text style={styles.modalTitle}>Edit Note</Text>
+              </View>
 
               <TextInput
                 label="Title"
                 mode="outlined"
                 value={editTitle}
                 onChangeText={setEditTitle}
-                style={[{ backgroundColor: 'white' }, { marginBottom: 15 }]}
-                textColor="black"
+                outlineColor="rgba(255,255,255,0.15)"
+                activeOutlineColor="#8B5CF6"
+                textColor="#FFFFFF"
+                style={styles.modalInput}
+                theme={{
+                  colors: {
+                    background: 'rgba(255,255,255,0.07)',
+                    onSurfaceVariant: 'rgba(255,255,255,0.45)',
+                  },
+                }}
               />
 
               <TextInput
@@ -185,22 +278,33 @@ const NotesScreen = ({ route }: any) => {
                 numberOfLines={6}
                 value={editContent}
                 onChangeText={setEditContent}
-                style={[{ backgroundColor: 'white' }]}
-                textColor="black"
+                outlineColor="rgba(255,255,255,0.15)"
+                activeOutlineColor="#8B5CF6"
+                textColor="#FFFFFF"
+                style={[styles.modalInput, { marginTop: 14 }]}
+                theme={{
+                  colors: {
+                    background: 'rgba(255,255,255,0.07)',
+                    onSurfaceVariant: 'rgba(255,255,255,0.45)',
+                  },
+                }}
               />
+
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   onPress={() => setEditVisible(false)}
-                  style={[{ flex: 1 }, { alignItems: 'center' }]}
+                  style={styles.cancelBtnWrap}
+                  activeOpacity={0.7}
                 >
                   <Text style={styles.cancelBtn}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={updateNote}
-                  style={[{ flex: 1 }, { alignItems: 'center' }]}
+                  style={styles.saveBtnWrap}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.YesBtn}>Yes</Text>
+                  <Text style={styles.saveBtn}>Save</Text>
                 </TouchableOpacity>
               </View>
             </View>
