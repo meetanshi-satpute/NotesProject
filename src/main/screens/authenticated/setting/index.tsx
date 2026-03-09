@@ -6,35 +6,51 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
-  Dimensions,
+  Alert,
 } from 'react-native';
+
+import {useNavigation} from '@react-navigation/native';
+import {supabase} from '../../../../lib/supabase';
 import {styles} from './styles';
+import { CustomModal } from '../../../components/customModal';
 
 const SettingScreen = () => {
+  const navigation = useNavigation<any>();
+
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutModal, setLogoutModal] = useState(false);
 
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
-  const handleLogout = () => {
-    console.log('User logged out');
-  };
-
   const handleEditProfile = () => {
     console.log('Edit profile clicked');
+  };
+
+  // Confirm Logout
+  const confirmLogout = async () => {
+    setLogoutModal(false);
+    setLoggingOut(true);
+
+    const {error} = await supabase.auth.signOut();
+
+    setLoggingOut(false);
+
+    if (error) {
+      Alert.alert('Error', error.message);
+      return;
+    }
+
+    navigation.replace('login');
   };
 
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor="#0F0B1E" />
 
-      {/* Ambient blobs */}
-      <View style={styles.blobRed} />
-      <View style={styles.blobBlue} />
-      <View style={styles.blobPurple} />
-
       <View style={styles.inner}>
-
-        {/* ── Header ── */}
+        
+        {/* Header */}
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.appLabel}>NOTES APP</Text>
@@ -42,15 +58,13 @@ const SettingScreen = () => {
           </View>
         </View>
 
-        {/* ── Profile Card ── */}
+        {/* Profile */}
         <View style={styles.profileCard}>
-          {/* Avatar with purple ring */}
           <View style={styles.avatarWrap}>
             <Image
               source={{uri: 'https://i.pravatar.cc/150?img=12'}}
               style={styles.avatar}
             />
-            <View style={styles.avatarRing} />
           </View>
 
           <View style={styles.profileInfo}>
@@ -60,39 +74,31 @@ const SettingScreen = () => {
 
           <TouchableOpacity
             onPress={handleEditProfile}
-            style={styles.editBtn}
-            activeOpacity={0.7}>
+            style={styles.editBtn}>
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
 
-        {/* ── Settings Card ── */}
+        {/* Settings Card */}
         <View style={styles.settingsCard}>
 
-          {/* Dark Mode row */}
+          {/* Dark Mode */}
           <View style={styles.row}>
             <View style={styles.rowLeft}>
-              <View style={[styles.rowIcon, {backgroundColor: 'rgba(139,92,246,0.2)'}]}>
-                <Text style={styles.rowEmoji}>🌙</Text>
-              </View>
               <Text style={styles.rowLabel}>Dark Mode</Text>
             </View>
+
             <Switch
               value={isDarkMode}
               onValueChange={toggleTheme}
-              trackColor={{false: 'rgba(255,255,255,0.1)', true: '#7C3AED'}}
-              thumbColor={isDarkMode ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
             />
           </View>
 
           <View style={styles.divider} />
 
-          {/* Notifications row (static UI) */}
+          {/* Notifications */}
           <View style={styles.row}>
             <View style={styles.rowLeft}>
-              <View style={[styles.rowIcon, {backgroundColor: 'rgba(59,130,246,0.2)'}]}>
-                <Text style={styles.rowEmoji}>🔔</Text>
-              </View>
               <Text style={styles.rowLabel}>Notifications</Text>
             </View>
             <Text style={styles.rowChevron}>›</Text>
@@ -100,28 +106,43 @@ const SettingScreen = () => {
 
           <View style={styles.divider} />
 
-          {/* Privacy row (static UI) */}
+          {/* Privacy */}
           <View style={styles.row}>
             <View style={styles.rowLeft}>
-              <View style={[styles.rowIcon, {backgroundColor: 'rgba(239,68,68,0.15)'}]}>
-                <Text style={styles.rowEmoji}>🔒</Text>
-              </View>
               <Text style={styles.rowLabel}>Privacy</Text>
             </View>
             <Text style={styles.rowChevron}>›</Text>
           </View>
+
         </View>
 
-        {/* ── Logout Button ── */}
+        {/* Logout Button */}
         <TouchableOpacity
-          style={styles.logoutBtn}
-          onPress={handleLogout}
-          activeOpacity={0.85}>
-          <Text style={styles.logoutText}>Log Out</Text>
-          <Text style={styles.logoutArrow}>→</Text>
+          style={[styles.logoutBtn, loggingOut && {opacity: 0.6}]}
+          onPress={() => setLogoutModal(true)}
+          disabled={loggingOut}
+        >
+          <Text style={styles.logoutText}>
+            {loggingOut ? 'Logging out...' : 'Log Out'}
+          </Text>
+
+          {!loggingOut && <Text style={styles.logoutArrow}>→</Text>}
         </TouchableOpacity>
 
       </View>
+
+      {/* Logout Modal */}
+      <CustomModal
+        isVisible={logoutModal}
+        title="Log Out"
+        detail="Are you sure you want to log out?"
+        noText="Cancel"
+        yesText="Log Out"
+        onClose={() => setLogoutModal(false)}
+        onPressNo={() => setLogoutModal(false)}
+        onPressYes={confirmLogout}
+      />
+
     </View>
   );
 };
